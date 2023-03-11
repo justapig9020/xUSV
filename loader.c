@@ -4,59 +4,72 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdint.h>
 
-#define BOOT_ADDRESS 0x17c00
+#include "loader.h"
 
-int main() {
+#define X86_BOOT_ADDRESS 0x17C00
+
+static void *load_vm(char *img_name, uintptr_t load_addr) {
     int fd;
     struct stat sb;
-    void *text;
+    void *alloc;
+    void *program = NULL;
 
-    // 開啟 kernel.img
-    fd = open("kernel.img", O_RDONLY);
+    fd = open(img_name, O_RDONLY);
     if (fd == -1) {
         perror("open");
-        exit(EXIT_FAILURE);
+        goto err;
     }
 
-    // 取得 kernel.img 的檔案屬性
     if (fstat(fd, &sb) == -1) {
         perror("fstat");
-        exit(EXIT_FAILURE);
+        goto err;
     }
 
     size_t page_size = getpagesize();
-    void *text_address = (void*)(BOOT_ADDRESS & ~(page_size - 1));
-    printf("text: %p\n", text_address);
-    text = mmap((void*)(BOOT_ADDRESS & ~(page_size - 1)), sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0);
-    printf("mmap: %p\n", text);
-    if (text == MAP_FAILED) {
+    void *text_base = (void*)(load_addr & ~(page_size - 1));
+
+    alloc = mmap(
+        (void*)(load_addr & ~(page_size - 1)),
+        sb.st_size,
+        PROT_READ | PROT_WRITE | PROT_EXEC,
+        MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS,
+        -1,
+        0
+    );
+
+    if (alloc == MAP_FAILED) {
         perror("mmap");
-        exit(EXIT_FAILURE);
+        goto err;
     }
 
-    if (read(fd, (void*)BOOT_ADDRESS, sb.st_size) == -1) {
+    if (read(fd, (void*)load_addr, sb.st_size) == -1) {
         perror("read");
-        exit(EXIT_FAILURE);
+        goto unmap;
     }
 
-    // 關閉檔案
     if (close(fd) == -1) {
         perror("close");
-        exit(EXIT_FAILURE);
+        goto unmap;
     }
 
-    // 執行映射區段的內容
-    printf("Enter\n");
-    int (*entry)() = (int (*)())BOOT_ADDRESS;
-    int result = entry();
-    printf("Done\n");
-
-    // 解除映射
-    if (munmap(text, sb.st_size) == -1) {
+   return alloc;
+unmap:
+    if (munmap(alloc, sb.st_size) == -1) {
         perror("munmap");
         exit(EXIT_FAILURE);
     }
 
-    return result;
+err:
+    return NULL;
+}
+
+bool init_vm(struct VM *vm, char *img_name) {
+    void *text = load_vm(img_name, X86_BOOT_ADDRESS);
+    if (!text)
+        return false;
+    vm->text = text;
+    vm->entry = (void*)X86_BOOT_ADDRESS;
+    return true;
 }
