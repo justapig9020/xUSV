@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <ucontext.h>
 #include <stdbool.h>
+#include "inst_parser.h"
 #include "loader.h"
 
 #define KERNEL "kernel.img"
@@ -13,14 +14,16 @@
 void handler(int signum, siginfo_t *info, void *context) {
     ucontext_t *ctx = (ucontext_t *) context;
     uintptr_t rip = ctx->uc_mcontext.gregs[REG_RIP];
-    printf("CPU context at RIP = %p\n", (void*) rip);
-    printf("Inst: ");
-    for (int i=0; i<10; i++) {
-        printf("%x", ((int*)rip)[i]);
+
+    struct Inst inst;
+    if (!parse_inst((void*)rip, &inst)) {
+        puts("Instruction parse failed");
+        exit(EXIT_FAILURE);
     }
-    puts("");
-    ctx->uc_mcontext.gregs[REG_RIP] = rip + 2;
-    printf("Returning to RIP = %llx\n", ctx->uc_mcontext.gregs[REG_RIP]);
+
+    inst.emulator(ctx);
+
+    ctx->uc_mcontext.gregs[REG_RIP] = rip + inst.len;
 }
 
 int register_handlers() {
@@ -36,17 +39,17 @@ int main(void) {
         perror("signal error");
         exit(EXIT_FAILURE);
     }
-    printf("[Done]\n");
+    puts("[Done]");
 
     // Init vm
     printf("Init VM");
     struct VM vm;
     if (!init_vm(&vm, KERNEL))
         return EXIT_FAILURE;
-    printf("[Done]\n");
+    puts("[Done]");
 
     // start VM
-    printf("Start VM");
+    puts("Start VM");
     vm.entry();
     for(;;)
     return EXIT_SUCCESS;

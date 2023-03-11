@@ -1,13 +1,14 @@
-all: vmm
+CC := gcc
+EXE = vmm
+C_FILES = $(wildcard *.c)
+OBJ_FILES = $(C_FILES: %.c=%.o)
 
-vmm: loader.o main.o
-	gcc -o vmm loader.o main.o
+all:$(OBJ_FILES)
+	$(CC) -o $(EXE) $(OBJ_FILES)  
 
-loader.o: loader.c vm.h
-	gcc -o loader.o -c loader.c
+%.o:%.c
+	$(CC) -c $^ -o $@
 
-main.o: main.c vm.h
-	gcc -o main.o -c main.c
-
+.PHONY:clean
 clean:
-	rm -f *.o vmm
+	rm -rf *.o $(EXE)
