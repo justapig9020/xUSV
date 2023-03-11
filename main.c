@@ -1,22 +1,23 @@
 #define _GNU_SOURCE
-#include <stdio.h>
-#include <unistd.h>
-#include <stdint.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <ucontext.h>
-#include <stdbool.h>
+#include <unistd.h>
+
 #include "inst_parser.h"
 #include "loader.h"
 
 #define KERNEL "kernel.img"
 
 void handler(int signum, siginfo_t *info, void *context) {
-    ucontext_t *ctx = (ucontext_t *) context;
+    ucontext_t *ctx = (ucontext_t *)context;
     uintptr_t rip = ctx->uc_mcontext.gregs[REG_RIP];
 
     struct Inst inst;
-    if (!parse_inst((void*)rip, &inst)) {
+    if (!parse_inst((void *)rip, &inst)) {
         puts("Instruction parse failed");
         exit(EXIT_FAILURE);
     }
@@ -51,7 +52,7 @@ int main(void) {
     // start VM
     puts("Start VM");
     vm.entry();
-    for(;;)
+    for (;;)
+        ;
     return EXIT_SUCCESS;
 }
-

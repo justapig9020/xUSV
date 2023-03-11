@@ -1,12 +1,12 @@
+#include "loader.h"
+
+#include <fcntl.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <stdint.h>
-
-#include "loader.h"
 
 #define X86_BOOT_ADDRESS 0x17C00
 
@@ -28,23 +28,18 @@ static void *load_vm(char *img_name, uintptr_t load_addr) {
     }
 
     size_t page_size = getpagesize();
-    void *text_base = (void*)(load_addr & ~(page_size - 1));
+    void *text_base = (void *)(load_addr & ~(page_size - 1));
 
-    alloc = mmap(
-        (void*)(load_addr & ~(page_size - 1)),
-        sb.st_size,
-        PROT_READ | PROT_WRITE | PROT_EXEC,
-        MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS,
-        -1,
-        0
-    );
+    alloc = mmap((void *)(load_addr & ~(page_size - 1)), sb.st_size,
+                 PROT_READ | PROT_WRITE | PROT_EXEC,
+                 MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0);
 
     if (alloc == MAP_FAILED) {
         perror("mmap");
         goto err;
     }
 
-    if (read(fd, (void*)load_addr, sb.st_size) == -1) {
+    if (read(fd, (void *)load_addr, sb.st_size) == -1) {
         perror("read");
         goto unmap;
     }
@@ -54,7 +49,7 @@ static void *load_vm(char *img_name, uintptr_t load_addr) {
         goto unmap;
     }
 
-   return alloc;
+    return alloc;
 unmap:
     if (munmap(alloc, sb.st_size) == -1) {
         perror("munmap");
@@ -70,6 +65,6 @@ bool init_vm(struct VM *vm, char *img_name) {
     if (!text)
         return false;
     vm->text = text;
-    vm->entry = (void*)X86_BOOT_ADDRESS;
+    vm->entry = (void *)X86_BOOT_ADDRESS;
     return true;
 }

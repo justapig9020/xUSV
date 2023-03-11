@@ -6,3 +6,4 @@
 !.gitignore
 !*/
 !*.ld
+!.clang-format
