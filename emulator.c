@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ucontext.h>
 #include <unistd.h>
 
@@ -44,4 +45,9 @@ bool int_imm8_emulation(ucontext_t *ctx) {
         break;
     }
     return success;
+}
+
+bool halt_emulation(ucontext_t *_ctx) {
+    printf("\n[VMM] Processor halt!\n");
+    exit(EXIT_SUCCESS);
 }

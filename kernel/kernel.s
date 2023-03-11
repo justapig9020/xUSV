@@ -6,6 +6,7 @@
     mov ds, ax
     mov es, ax
     call DispStr # call display string
+    hlt
     jmp . # loop
 
 DispStr:

@@ -11,10 +11,16 @@ typedef void *(*parser_t)(uint8_t opcode, struct Inst *inst);
 static void *first_byte_parser(uint8_t opcode, struct Inst *inst) {
     parser_t next;
     switch (opcode) {
-    case 0xCD:
+    case 0xCD: // int
         inst->name = "int";
         inst->len = 2;
         inst->emulator = int_imm8_emulation;
+        next = NULL;
+        break;
+    case 0xF4: // hlt
+        inst->name = "hlt";
+        inst->len = 1;
+        inst->emulator = halt_emulation;
         next = NULL;
         break;
     default:

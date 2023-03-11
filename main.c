@@ -52,7 +52,5 @@ int main(void) {
     // start VM
     puts("Start VM");
     vm.entry();
-    for (;;)
-        ;
     return EXIT_SUCCESS;
 }
