@@ -2,4 +2,5 @@
 #include <stdbool.h>
 #include <ucontext.h>
 
-bool int_imm8_emulation(ucontext_t* ctx);
+bool int_imm8_emulation(ucontext_t *ctx);
+bool halt_emulation(ucontext_t *ctx);
