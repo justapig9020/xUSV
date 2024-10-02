@@ -10,8 +10,6 @@
 #include "inst_parser.h"
 #include "loader.h"
 
-#define KERNEL "kernel.img"
-
 void handler(int signum, siginfo_t *info, void *context) {
     ucontext_t *ctx = (ucontext_t *)context;
     uintptr_t rip = ctx->uc_mcontext.gregs[REG_RIP];
@@ -34,7 +32,12 @@ int register_handlers() {
     return sigaction(SIGSEGV, &sa, NULL);
 }
 
-int main(void) {
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage: ./vmm <image>\n");
+        return EXIT_FAILURE;
+    }
+    char *image = argv[1];
     printf("Register hadler");
     if (register_handlers() == -1) {
         perror("signal error");
@@ -45,7 +48,7 @@ int main(void) {
     // Init vm
     printf("Init VM");
     struct VM vm;
-    if (!init_vm(&vm, KERNEL))
+    if (!init_vm(&vm, image))
         return EXIT_FAILURE;
     puts("[Done]");
 
